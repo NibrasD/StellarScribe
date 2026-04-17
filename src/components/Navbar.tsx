@@ -1,0 +1,143 @@
+import { Link, useLocation } from 'react-router-dom';
+import { useWallet } from '../store/useWallet';
+import { formatAddress } from '../lib/utils';
+import { Wallet, PenSquare, Compass, LayoutDashboard, Gem, Menu, X, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+const NAV_LINKS = [
+  { to: '/explore', label: 'Explore', icon: Compass },
+  { to: '/write', label: 'Write', icon: PenSquare },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+];
+
+export function Navbar() {
+  const { isConnected, publicKey, connect, disconnect, isConnecting, balance } = useWallet();
+  const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  return (
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-[var(--color-bg-base)]/95 backdrop-blur-xl border-b border-[var(--color-border)]' 
+          : 'bg-transparent'
+      }`}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 flex items-center justify-center relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:bg-primary/30 transition-all" />
+              <Gem className="w-5 h-5 text-primary group-hover:text-accent transition-colors relative z-10" />
+            </div>
+            <span className="text-[22px] font-serif tracking-[-0.5px] text-white">
+              Stellar<span className="text-gradient">Scribe</span>
+            </span>
+          </Link>
+          
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ to, label }) => {
+              const isActive = location.pathname === to;
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`px-4 py-2 text-[11px] font-mono tracking-[1.5px] uppercase transition-all duration-200 rounded-sm ${
+                    isActive
+                      ? 'text-white bg-white/5'
+                      : 'text-[var(--color-text-dim)] hover:text-white hover:bg-white/[0.03]'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right Side */}
+          <div className="flex items-center gap-3">
+            {isConnected ? (
+              <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-sm">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="text-[11px] font-mono text-primary">{formatAddress(publicKey)}</span>
+                </div>
+                <button 
+                  onClick={disconnect}
+                  className="text-[10px] font-mono uppercase tracking-[1px] text-[var(--color-text-dim)] hover:text-[var(--color-error)] transition-colors cursor-pointer px-2 py-1.5"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={connect}
+                disabled={isConnecting}
+                className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-black font-semibold text-[11px] font-mono uppercase tracking-[1.5px] hover:bg-gray-100 transition-all disabled:opacity-50 cursor-pointer rounded-sm"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                {isConnecting ? "Connecting..." : "Connect Wallet"}
+              </button>
+            )}
+
+            {/* Mobile Toggle */}
+            <button 
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden text-white cursor-pointer p-1"
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-[var(--color-bg-base)]/98 backdrop-blur-xl md:hidden animate-fadeIn">
+          <div className="flex flex-col items-center justify-center h-full gap-8">
+            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className="flex items-center gap-3 text-[14px] font-mono uppercase tracking-[2px] text-[var(--color-text-secondary)] hover:text-white transition-colors"
+              >
+                <Icon className="w-5 h-5" />
+                {label}
+              </Link>
+            ))}
+            
+            <div className="border-t border-[var(--color-border)] pt-8 mt-4 w-48">
+              {isConnected ? (
+                <div className="flex flex-col items-center gap-3">
+                  <span className="text-[11px] font-mono text-primary">{formatAddress(publicKey)}</span>
+                  <button onClick={disconnect} className="text-[11px] font-mono uppercase text-[var(--color-error)] cursor-pointer">
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={connect}
+                  disabled={isConnecting}
+                  className="w-full py-3 bg-white text-black font-semibold text-[11px] font-mono uppercase tracking-[1.5px] cursor-pointer rounded-sm"
+                >
+                  {isConnecting ? "Connecting..." : "Connect Wallet"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
