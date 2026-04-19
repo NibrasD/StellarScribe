@@ -1,6 +1,6 @@
 # StellarScribe ✨
 
-**StellarScribe** is a premium, decentralized content publishing platform built on the **Stellar Network** utilizing **Soroban Smart Contracts**. It empowers creators to publish, tokenize, and monetize their long-form writing natively on Web3, ensuring they retain 100% ownership of their content and revenue.
+**StellarScribe** is a premium, decentralized content publishing platform built on the **Stellar** utilizing **Soroban Smart Contracts**. It empowers creators to publish, tokenize, and monetize their long-form writing natively on Web3, ensuring they retain ownership of their content and revenue.
 
 ---
 
