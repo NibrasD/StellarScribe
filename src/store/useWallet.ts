@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { isAllowed, setAllowed, requestAccess, getAddress } from '@stellar/freighter-api';
 import { useToast } from './useToast';
+import { fetchXlmBalance } from '../lib/stellar';
 
 interface WalletState {
   isConnected: boolean;
@@ -10,9 +11,10 @@ interface WalletState {
   balance: string;
   connect: () => Promise<void>;
   disconnect: () => void;
+  refreshBalance: () => Promise<void>;
 }
 
-export const useWallet = create<WalletState>((set) => ({
+export const useWallet = create<WalletState>((set, get) => ({
   isConnected: false,
   publicKey: null,
   isConnecting: false,
@@ -55,11 +57,13 @@ export const useWallet = create<WalletState>((set) => ({
       }
 
       if (pubKey) {
-        set({ isConnected: true, publicKey: pubKey, isConnecting: false, balance: '1,000' });
+        // ── FIX: Fetch real balance from Horizon instead of hardcoded '1,000' ──
+        const realBalance = await fetchXlmBalance(pubKey);
+        set({ isConnected: true, publicKey: pubKey, isConnecting: false, balance: realBalance });
         toast.updateToast(loadingId, { 
           type: 'success', 
           title: 'Wallet Connected', 
-          message: `${pubKey.slice(0,4)}...${pubKey.slice(-4)}` 
+          message: `${pubKey.slice(0,4)}...${pubKey.slice(-4)} — ${realBalance} XLM` 
         });
       } else {
         throw new Error("Could not retrieve public key from Freighter.");
@@ -83,5 +87,21 @@ export const useWallet = create<WalletState>((set) => ({
   disconnect: () => {
     set({ isConnected: false, publicKey: null, connectError: null, balance: '0' });
     useToast.getState().addToast({ type: 'info', title: 'Wallet Disconnected' });
-  }
+  },
+
+  /**
+   * Refresh the wallet balance from the Horizon API.
+   * Call this after any on-chain transaction to keep the UI in sync.
+   */
+  refreshBalance: async () => {
+    const { publicKey, isConnected } = get();
+    if (!isConnected || !publicKey) return;
+    try {
+      const realBalance = await fetchXlmBalance(publicKey);
+      set({ balance: realBalance });
+    } catch {
+      // Silently fail — keep the last known balance
+    }
+  },
 }));
+

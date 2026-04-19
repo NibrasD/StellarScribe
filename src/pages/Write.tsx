@@ -6,7 +6,9 @@ import { useToast } from '../store/useToast';
 import { generateMockId, readingTime } from '../lib/utils';
 import { hashContent } from '../lib/contract';
 import { uploadToIPFS } from '../lib/ipfs';
-import { writeArticleToChain, mintContent } from '../lib/stellar';
+import { writeArticleToChain, mintContent, extractTokenIdFromResult, fetchContentById } from '../lib/stellar';
+import { readSorobanContract } from '../lib/stellar';
+import { CONTRACT_METHODS } from '../lib/contract';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { PublishModal } from '../components/PublishModal';
 import { Save, UploadCloud, AlertCircle, Lock, Coins, Settings } from 'lucide-react';
@@ -62,19 +64,39 @@ export function Write() {
         accessPrice
       );
       
-      // Step 3: Confirming on-chain
+      // Step 3: Confirming on-chain + extract token ID
       setPublishStep(3);
       const txHash = result?.hash || `tx_${generateMockId()}`;
       setPublishTxHash(txHash);
+
+      // ── FIX: Extract real token_id from contract result instead of random ──
+      let extractedTokenId = extractTokenIdFromResult(result);
+      if (extractedTokenId === null) {
+        // Fallback: query the contract for the next token ID and subtract 1
+        try {
+          const nextId = await readSorobanContract(CONTRACT_METHODS.GET_NEXT_TOKEN_ID);
+          if (nextId && typeof nextId === 'number') {
+            extractedTokenId = nextId - 1;
+          }
+        } catch (e) {
+          console.error('Fallback token ID fetch failed:', e);
+        }
+      }
+      // Final fallback if everything fails
+      if (extractedTokenId === null) {
+        extractedTokenId = Date.now();
+        console.warn('Using timestamp as token ID fallback — data may be inconsistent');
+      }
+
       await new Promise(r => setTimeout(r, 1000));
 
       // Complete — add to local store
-      const articleId = generateMockId();
+      const articleId = `onchain-${extractedTokenId}`;
       setNewArticleId(articleId);
 
       const newArticle = {
         id: articleId,
-        tokenId: Math.floor(Math.random() * 9000) + 1000,
+        tokenId: extractedTokenId,
         title: title.trim(),
         excerpt: excerpt.trim() || title.trim(),
         content: contentBody,

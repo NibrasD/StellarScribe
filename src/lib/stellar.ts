@@ -326,3 +326,71 @@ export async function writeArticleToChain(senderPublicKey: string, title: string
     throw error;
   }
 }
+
+// ─── On-Chain Access Check ──────────────────────────────────────────────────
+
+/**
+ * Check if a user has access to a specific token-gated content (read-only, no wallet needed).
+ * Calls the contract's `has_access` function.
+ */
+export async function checkAccess(publicKey: string, tokenId: number): Promise<boolean> {
+  try {
+    const args = [
+      new Address(publicKey).toScVal(),
+      nativeToScVal(tokenId, { type: 'u64' }),
+    ];
+    const result = await readSorobanContract(CONTRACT_METHODS.HAS_ACCESS, args);
+    return result === true;
+  } catch (e) {
+    console.error('checkAccess error:', e);
+    return false;
+  }
+}
+
+// ─── Real Balance Fetching ──────────────────────────────────────────────────
+
+/**
+ * Fetch the real XLM balance from the Horizon testnet API.
+ */
+export async function fetchXlmBalance(publicKey: string): Promise<string> {
+  try {
+    const response = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
+    if (!response.ok) return '0';
+    const data = await response.json();
+    const nativeBalance = data.balances?.find((b: any) => b.asset_type === 'native');
+    if (!nativeBalance) return '0';
+    const bal = parseFloat(nativeBalance.balance);
+    return bal.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+  } catch {
+    return '0';
+  }
+}
+
+// ─── Token ID Extraction from Mint Result ───────────────────────────────────
+
+/**
+ * Extract the token_id from a mint_content transaction result.
+ * The contract returns a ContentNFT struct which contains token_id.
+ */
+export function extractTokenIdFromResult(result: any): number | null {
+  try {
+    // Try to extract from resultMetaXdr (Soroban return value)
+    const meta = result?.result?.resultMetaXdr;
+    if (meta) {
+      const returnVal = meta.v3().sorobanMeta().returnValue();
+      const native = scValToNative(returnVal);
+      if (native && typeof native.token_id !== 'undefined') {
+        return Number(native.token_id);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to extract token_id from result meta:', e);
+  }
+
+  // Fallback: try to get the next token id from the contract and subtract 1
+  // (the just-minted token)
+  return null;
+}

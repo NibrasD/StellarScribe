@@ -8,7 +8,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Lock, FileText, ExternalLink, ShieldCheck, Coins, Heart, Copy, Check, Clock, Eye, Hash, Users, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { sendStellarPayment, fetchContentById } from '../lib/stellar';
+import { purchaseAccess, tipAuthor, fetchContentById, checkAccess } from '../lib/stellar';
+import { xlmToStroops } from '../lib/contract';
 import { getIPFSGatewayUrl } from '../lib/ipfs';
 
 const TIP_PRESETS = [1, 5, 10, 25];
@@ -18,7 +19,7 @@ export function Article() {
   const localArticle = useAppStore(state => state.articles.find(a => a.id === id));
   const fundArticle = useAppStore(state => state.fundArticle);
   const tipArticle = useAppStore(state => state.tipArticle);
-  const { isConnected, publicKey } = useWallet();
+  const { isConnected, publicKey, refreshBalance } = useWallet();
   const toast = useToast();
   
   const [hasUnlocked, setHasUnlocked] = useState(false);
@@ -91,6 +92,16 @@ export function Article() {
 
   // Merge: prefer local article, fall back to chain
   const article = localArticle || chainArticle;
+
+  // ── On-chain access check (fixes: access verification via contract, not local state) ──
+  useEffect(() => {
+    if (!publicKey || !article?.tokenId || !article.isTokenGated) return;
+    let cancelled = false;
+    checkAccess(publicKey, article.tokenId).then(hasIt => {
+      if (!cancelled) setHasUnlocked(hasIt);
+    });
+    return () => { cancelled = true; };
+  }, [publicKey, article?.tokenId, article?.isTokenGated]);
   
   // Use IPFS content if the local content is empty
   const displayContent = (article?.content && article.content.length > 0) 
@@ -124,6 +135,11 @@ export function Article() {
       toast.addToast({ type: 'error', title: 'Wallet Required', message: 'Please connect your Freighter wallet first.' });
       return;
     }
+
+    if (!article.tokenId) {
+      toast.addToast({ type: 'error', title: 'Missing Token ID', message: 'This article has no on-chain token ID.' });
+      return;
+    }
     
     setIsTransacting(true);
     const loadingId = toast.addToast({ 
@@ -133,15 +149,11 @@ export function Article() {
     });
 
     try {
-      const amount = type === 'unlock' ? (article.price || 5).toString() : tipAmount.toString();
-      
-      const result = await sendStellarPayment(
-        publicKey,
-        article.authorPublicKey,
-        amount
-      );
+      let result: any;
 
       if (type === 'unlock') {
+        // ── FIX: Call purchase_access on the smart contract (not direct payment) ──
+        result = await purchaseAccess(publicKey, article.tokenId);
         setHasUnlocked(true);
         fundArticle(article.id, article.price || 0);
         toast.updateToast(loadingId, { 
@@ -150,12 +162,15 @@ export function Article() {
           message: `TX: ${result?.hash?.slice(0, 16)}...` 
         });
       } else {
+        // ── FIX: Call tip_author on the smart contract (not direct payment) ──
+        const tipStroops = xlmToStroops(Number(tipAmount));
+        result = await tipAuthor(publicKey, article.tokenId, tipStroops);
         tipArticle(article.id, Number(tipAmount));
         setTipAmount('');
         toast.updateToast(loadingId, { 
           type: 'success', 
           title: 'Tip Sent!', 
-          message: `${amount} XLM sent to author` 
+          message: `${tipAmount} XLM sent to author via contract` 
         });
       }
     } catch (error: any) {
@@ -167,6 +182,8 @@ export function Article() {
       });
     } finally {
       setIsTransacting(false);
+      // Refresh balance after any transaction attempt
+      refreshBalance();
     }
   };
 
