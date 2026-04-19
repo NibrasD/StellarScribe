@@ -10,7 +10,7 @@ import { Lock, FileText, ExternalLink, ShieldCheck, Coins, Heart, Copy, Check, C
 import { useState, useEffect } from 'react';
 import { purchaseAccess, tipAuthor, fetchContentById, checkAccess } from '../lib/stellar';
 import { xlmToStroops } from '../lib/contract';
-import { getIPFSGatewayUrl } from '../lib/ipfs';
+import { fetchIPFSContent } from '../lib/ipfs';
 
 const TIP_PRESETS = [1, 5, 10, 25];
 
@@ -68,18 +68,12 @@ export function Article() {
         };
         setChainArticle(art);
         
-        // Fetch content from IPFS if hash looks like a CID (starts with Qm or ba)
+        // Fetch content from IPFS using cached fetcher
         const cid = art.contentHash;
-        if (cid && (cid.startsWith('Qm') || cid.startsWith('ba'))) {
-          try {
-            const url = getIPFSGatewayUrl(cid);
-            const res = await fetch(url);
-            if (res.ok) {
-              const text = await res.text();
-              setIpfsContent(text);
-            }
-          } catch (e) {
-            console.error('Failed to fetch IPFS content:', e);
+        if (cid) {
+          const ipfsText = await fetchIPFSContent(cid);
+          if (ipfsText) {
+            setIpfsContent(ipfsText);
           }
         }
       } catch (e) {

@@ -3,6 +3,7 @@ import { ArticleCard } from '../components/ArticleCard';
 import { useState, useEffect } from 'react';
 import { Search, Filter, BookOpen, Loader2 } from 'lucide-react';
 import { fetchAllArticlesFromChain } from '../lib/stellar';
+import { preloadIPFSContent } from '../lib/ipfs';
 
 type FilterType = 'all' | 'free' | 'gated' | 'crowdfund';
 
@@ -26,7 +27,14 @@ export function Explore() {
     (async () => {
       try {
         const onChain = await fetchAllArticlesFromChain();
-        if (!cancelled) setChainArticles(onChain as Article[]);
+        if (!cancelled) {
+          setChainArticles(onChain as Article[]);
+          // Preload IPFS content in the background for faster article loading
+          const cids = onChain
+            .map((a: any) => a.contentHash)
+            .filter((cid: string) => cid && cid.length > 0);
+          preloadIPFSContent(cids);
+        }
       } catch (e) {
         console.error('Failed to fetch on-chain articles:', e);
       } finally {

@@ -1,15 +1,16 @@
 import { useWallet } from '../store/useWallet';
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore, Article } from '../store/useAppStore';
 import { useToast } from '../store/useToast';
 import { formatAddress, addressGradient } from '../lib/utils';
-import { registerAuthor } from '../lib/stellar';
-import { Wallet, TrendingUp, FileText, ArrowUpRight, Shield, Coins, UserPlus, Eye, Heart, Hash } from 'lucide-react';
+import { registerAuthor, fetchAuthorProfile, fetchAuthorArticlesFromChain } from '../lib/stellar';
+import { stroopsToXlm } from '../lib/contract';
+import { Wallet, TrendingUp, FileText, ArrowUpRight, Shield, Coins, UserPlus, Eye, Heart, Hash, Loader2, RefreshCw } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
-import { useState }  from 'react';
+import { useState, useEffect, useCallback }  from 'react';
 
 export function Dashboard() {
   const { isConnected, publicKey, balance } = useWallet();
-  const articles = useAppStore(state => state.articles);
+  const localArticles = useAppStore(state => state.articles);
   const registeredAuthor = useAppStore(state => state.registeredAuthor);
   const setRegisteredAuthor = useAppStore(state => state.setRegisteredAuthor);
   const toast = useToast();
@@ -19,12 +20,82 @@ export function Dashboard() {
   const [authorBio, setAuthorBio] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // ── On-chain dashboard state ──
+  const [chainArticles, setChainArticles] = useState<Article[]>([]);
+  const [chainLoading, setChainLoading] = useState(true);
+  const [chainTotalEarned, setChainTotalEarned] = useState<number | null>(null);
+
+  // ── Fetch on-chain dashboard data ──
+  const syncFromChain = useCallback(async () => {
+    if (!publicKey) return;
+    setChainLoading(true);
+    try {
+      // Fetch author profile from the contract
+      const profile = await fetchAuthorProfile(publicKey);
+      if (profile) {
+        const earned = stroopsToXlm(Number(profile.total_earned || 0));
+        setChainTotalEarned(earned);
+
+        // Auto-sync registered author if on-chain but not in local store
+        if (!registeredAuthor) {
+          setRegisteredAuthor({
+            address: publicKey,
+            name: String(profile.name || ''),
+            bio: String(profile.bio || ''),
+            articleCount: Number(profile.article_count || 0),
+            totalEarned: earned,
+            registeredAt: Number(profile.registered_at || 0) * 1000,
+          });
+        }
+      }
+
+      // Fetch author's articles from the contract for real stats
+      const onChainArticles = await fetchAuthorArticlesFromChain(publicKey);
+      setChainArticles(onChainArticles as Article[]);
+    } catch (e) {
+      console.error('Failed to sync dashboard from chain:', e);
+    } finally {
+      setChainLoading(false);
+    }
+  }, [publicKey, registeredAuthor, setRegisteredAuthor]);
+
+  useEffect(() => {
+    syncFromChain();
+  }, [syncFromChain]);
+
   if (!isConnected) {
     return <Navigate to="/" />;
   }
 
-  const myArticles = articles.filter(a => a.authorPublicKey === publicKey);
-  const totalRevenue = myArticles.reduce((acc, curr) => acc + (curr.totalRaised || 0), 0);
+  // ── Merge local + on-chain articles (on-chain stats override) ──
+  const myArticles = (() => {
+    const byToken = new Map<number, Article>();
+    // On-chain articles first
+    for (const a of chainArticles) {
+      if (a.tokenId) byToken.set(a.tokenId, a);
+    }
+    // Local articles — merge keeping on-chain stats
+    const myLocal = localArticles.filter(a => a.authorPublicKey === publicKey);
+    for (const a of myLocal) {
+      if (a.tokenId && byToken.has(a.tokenId)) {
+        const chain = byToken.get(a.tokenId)!;
+        byToken.set(a.tokenId, {
+          ...a,
+          totalRaised: chain.totalRaised,
+          accessCount: chain.accessCount,
+          tipCount: chain.tipCount,
+        });
+      } else {
+        byToken.set(a.tokenId || Math.random(), a);
+      }
+    }
+    return Array.from(byToken.values()).sort((a, b) => b.createdAt - a.createdAt);
+  })();
+
+  // Use on-chain total_earned if available, otherwise sum from articles
+  const totalRevenue = chainTotalEarned !== null
+    ? chainTotalEarned
+    : myArticles.reduce((acc, curr) => acc + (curr.totalRaised || 0), 0);
   const totalTips = myArticles.reduce((acc, curr) => acc + (curr.tipCount || 0), 0);
   const totalReaders = myArticles.reduce((acc, curr) => acc + (curr.accessCount || 0), 0);
 
@@ -63,6 +134,15 @@ export function Dashboard() {
           <h1 className="font-serif text-[40px] tracking-[-1px] leading-[1.1]">Creator Studio</h1>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={syncFromChain}
+            disabled={chainLoading}
+            className="btn-outline flex items-center gap-2 !py-2.5 !px-4 text-[11px] disabled:opacity-50"
+            title="Sync stats from Soroban contract"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${chainLoading ? 'animate-spin' : ''}`} />
+            {chainLoading ? 'Syncing...' : 'Sync'}
+          </button>
           {!registeredAuthor && (
             <button 
               onClick={() => setShowRegister(true)}

@@ -49,3 +49,86 @@ export function getIPFSGatewayUrl(cid: string): string {
   // Using Pinata's public gateway or standard ipfs.io
   return `https://gateway.pinata.cloud/ipfs/${cid}`;
 }
+
+// ─── IPFS Content Cache ─────────────────────────────────────────────────────
+
+const CACHE_PREFIX = 'ipfs_cache_';
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/** In-memory LRU-style cache for the current session */
+const memoryCache = new Map<string, string>();
+
+/**
+ * Fetch IPFS content with two-layer caching:
+ * 1. In-memory Map (instant, current tab)
+ * 2. sessionStorage (persists across navigations within same tab)
+ * 3. Network fetch (gateway) as fallback
+ *
+ * Returns null if the CID is not a valid IPFS hash or the fetch fails.
+ */
+export async function fetchIPFSContent(cid: string): Promise<string | null> {
+  if (!cid || (!cid.startsWith('Qm') && !cid.startsWith('ba'))) {
+    return null;
+  }
+
+  // Layer 1: In-memory cache
+  if (memoryCache.has(cid)) {
+    return memoryCache.get(cid)!;
+  }
+
+  // Layer 2: sessionStorage cache
+  try {
+    const cached = sessionStorage.getItem(CACHE_PREFIX + cid);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.expiresAt > Date.now()) {
+        // Still valid — promote to memory cache and return
+        memoryCache.set(cid, parsed.content);
+        return parsed.content;
+      } else {
+        // Expired — clean up
+        sessionStorage.removeItem(CACHE_PREFIX + cid);
+      }
+    }
+  } catch {
+    // sessionStorage not available or corrupt — continue to network
+  }
+
+  // Layer 3: Network fetch from IPFS gateway
+  try {
+    const url = getIPFSGatewayUrl(cid);
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const text = await res.text();
+
+    // Store in both cache layers
+    memoryCache.set(cid, text);
+    try {
+      sessionStorage.setItem(
+        CACHE_PREFIX + cid,
+        JSON.stringify({ content: text, expiresAt: Date.now() + CACHE_TTL_MS })
+      );
+    } catch {
+      // sessionStorage full — silently skip
+    }
+
+    return text;
+  } catch (e) {
+    console.error('Failed to fetch IPFS content:', e);
+    return null;
+  }
+}
+
+/**
+ * Preload / warm the cache for a list of CIDs.
+ * Useful when loading the Explore page to prefetch article content in the background.
+ */
+export function preloadIPFSContent(cids: string[]): void {
+  for (const cid of cids) {
+    if (cid && !memoryCache.has(cid)) {
+      // Fire and forget — don't block the UI
+      fetchIPFSContent(cid).catch(() => {});
+    }
+  }
+}
+

@@ -394,3 +394,71 @@ export function extractTokenIdFromResult(result: any): number | null {
   // (the just-minted token)
   return null;
 }
+
+// ─── Author Profile Fetching ────────────────────────────────────────────────
+
+/**
+ * Fetch an author's on-chain profile (name, bio, article_count, total_earned).
+ * No wallet required — uses read-only simulation.
+ */
+export async function fetchAuthorProfile(publicKey: string): Promise<any | null> {
+  try {
+    const args = [new Address(publicKey).toScVal()];
+    return await readSorobanContract(CONTRACT_METHODS.GET_AUTHOR, args);
+  } catch (e) {
+    console.error('fetchAuthorProfile error:', e);
+    return null;
+  }
+}
+
+/**
+ * Fetch all content IDs minted by a specific author from the contract.
+ */
+export async function fetchAuthorContentIds(publicKey: string): Promise<number[]> {
+  try {
+    const args = [new Address(publicKey).toScVal()];
+    const result = await readSorobanContract(CONTRACT_METHODS.GET_AUTHOR_CONTENT_IDS, args);
+    if (!result || !Array.isArray(result)) return [];
+    return result.map((id: any) => Number(id));
+  } catch (e) {
+    console.error('fetchAuthorContentIds error:', e);
+    return [];
+  }
+}
+
+/**
+ * Fetch full article objects for a specific author from the chain.
+ * Returns articles with on-chain stats (totalRaised, accessCount, tipCount).
+ */
+export async function fetchAuthorArticlesFromChain(publicKey: string): Promise<any[]> {
+  const ids = await fetchAuthorContentIds(publicKey);
+  if (ids.length === 0) return [];
+
+  const articles = await Promise.all(
+    ids.map(async (tokenId) => {
+      const content = await fetchContentById(tokenId);
+      if (!content) return null;
+      return {
+        id: `onchain-${tokenId}`,
+        tokenId: Number(content.token_id),
+        title: String(content.title || ''),
+        excerpt: String(content.excerpt || ''),
+        content: '',
+        authorPublicKey: String(content.author || ''),
+        createdAt: Number(content.created_at) * 1000,
+        contentHash: String(content.content_hash || ''),
+        isTokenGated: Boolean(content.is_token_gated),
+        price: Number(content.access_price) / 10_000_000,
+        totalRaised: Number(content.total_raised) / 10_000_000,
+        accessCount: Number(content.access_count),
+        tipCount: Number(content.tip_count),
+        status: 'minted' as const,
+        tags: [],
+        readTime: '3 min read',
+      };
+    })
+  );
+
+  return articles.filter(Boolean);
+}
+

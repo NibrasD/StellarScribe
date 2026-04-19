@@ -6,12 +6,6 @@ import { useState, useEffect } from 'react';
 
 const HERO_WORDS = ['Publish.', 'Tokenize.', 'Monetize.', 'Own.'];
 
-const STATS = [
-  { label: 'Content NFTs Minted', value: '2,847', icon: BookOpen },
-  { label: 'XLM Raised', value: '156,320', icon: TrendingUp },
-  { label: 'Verified Authors', value: '412', icon: Users },
-];
-
 const HOW_IT_WORKS = [
   {
     step: '01',
@@ -143,20 +137,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ── Stats Banner ─────────────────────────────────────────────── */}
-      <section className="grid md:grid-cols-3 gap-6 -mt-8">
-        {STATS.map(({ label, value, icon: Icon }, i) => (
-          <div key={label} className="glass-panel p-6 flex items-center gap-5 animate-fadeIn" style={{ animationDelay: `${i * 0.1}s` }}>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-[28px] font-serif tracking-tight">{value}</div>
-              <div className="label-sm">{label}</div>
-            </div>
-          </div>
-        ))}
-      </section>
 
       {/* ── How It Works ─────────────────────────────────────────────── */}
       <section>
