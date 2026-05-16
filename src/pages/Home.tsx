@@ -3,35 +3,44 @@ import { useAppStore } from '../store/useAppStore';
 import { ArticleCard } from '../components/ArticleCard';
 import { ArrowRight, Zap, Shield, Coins, PenSquare, Hash, Users, BookOpen, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-const HERO_WORDS = ['Publish.', 'Tokenize.', 'Monetize.', 'Own.'];
-
-const HOW_IT_WORKS = [
-  {
-    step: '01',
-    title: 'Connect Wallet',
-    description: 'Link your Freighter wallet and register your on-chain author identity with a name and bio.',
-    icon: Shield,
-    color: 'primary',
-  },
-  {
-    step: '02',
-    title: 'Write & Mint',
-    description: 'Create your article in our Markdown editor. On publish, a Content NFT is minted via Soroban.',
-    icon: PenSquare,
-    color: 'accent',
-  },
-  {
-    step: '03',
-    title: 'Earn & Grow',
-    description: 'Receive tips and token-gated access payments directly to your wallet. Zero platform fees.',
-    icon: Coins,
-    color: 'primary',
-  },
-];
+import { useTranslation } from 'react-i18next';
 
 export function Home() {
+  const { t } = useTranslation();
   const articles = useAppStore(state => state.articles);
+  
+  const HERO_WORDS = [
+    t('words.publish'),
+    t('words.tokenize'),
+    t('words.monetize'),
+    t('words.own')
+  ];
+
+  const HOW_IT_WORKS = [
+    {
+      step: '01',
+      title: t('home.how_it_works.steps.01.title'),
+      description: t('home.how_it_works.steps.01.description'),
+      icon: Shield,
+      color: 'primary',
+    },
+    {
+      step: '02',
+      title: t('home.how_it_works.steps.02.title'),
+      description: t('home.how_it_works.steps.02.description'),
+      icon: PenSquare,
+      color: 'accent',
+    },
+    {
+      step: '03',
+      title: t('home.how_it_works.steps.03.title'),
+      description: t('home.how_it_works.steps.03.description'),
+      icon: Coins,
+      color: 'primary',
+    },
+  ];
+
+  const featuredArticles = articles.slice(0, 3);
   const featuredArticles = articles.slice(0, 3);
   const [heroWordIdx, setHeroWordIdx] = useState(0);
 
@@ -52,27 +61,27 @@ export function Home() {
         <div className="flex flex-col gap-7 relative z-10 animate-fadeIn">
           <span className="eyebrow inline-flex items-center gap-2 w-fit">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            Soroban Smart Contracts — Live on Testnet
+            {t('home.hero.eyebrow')}
           </span>
           
           <h1 className="font-serif text-[60px] lg:text-[76px] leading-[1.02] font-normal tracking-[-2.5px]">
-            Write.<br />
+            {t('home.hero.title', { word: '' }).split('{{word}}')[0]}<br />
             <span className="text-gradient inline-block transition-all duration-500" key={heroWordIdx}>
               {HERO_WORDS[heroWordIdx]}
             </span><br />
-            <span className="text-[var(--color-text-secondary)]">Earn.</span>
+            <span className="text-[var(--color-text-secondary)]">{t('home.hero.title', { word: '' }).split('{{word}}')[1]}</span>
           </h1>
           
           <p className="text-[17px] leading-[1.65] text-[var(--color-text-dim)] max-w-lg">
-            StellarScribe empowers creators to mint long-form content as NFTs, setup token-gated access, and earn directly via Stellar smart contracts. Complete ownership, verified on-chain.
+            {t('home.hero.subtitle')}
           </p>
           
           <div className="flex flex-wrap items-center gap-4 mt-2">
             <Link to="/write" className="btn-primary flex items-center gap-2 group w-fit">
-              Start Writing <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {t('home.hero.start_writing')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
             </Link>
             <Link to="/explore" className="btn-outline w-fit">
-              Explore Articles
+              {t('home.hero.explore_articles')}
             </Link>
           </div>
         </div>
@@ -88,8 +97,8 @@ export function Home() {
                 <Hash className="w-4 h-4 text-white" />
               </div>
               <div>
-                <div className="text-[13px] font-medium">Content NFT #247</div>
-                <div className="text-[10px] font-mono text-primary uppercase tracking-wider">Minting via Soroban</div>
+                <div className="text-[13px] font-medium">{t('home.hero.content_nft')}</div>
+                <div className="text-[10px] font-mono text-primary uppercase tracking-wider">{t('home.hero.minting_via')}</div>
               </div>
             </div>
             
@@ -102,18 +111,18 @@ export function Home() {
 
             <div className="pt-6 border-t border-[var(--color-border)] grid grid-cols-3 gap-4">
               <div>
-                <div className="label-sm mb-1">Author</div>
+                <div className="label-sm mb-1">{t('home.hero.author')}</div>
                 <div className="text-[13px] font-mono text-primary">GBX4...WT7I</div>
               </div>
               <div>
-                <div className="label-sm mb-1">Hash</div>
+                <div className="label-sm mb-1">{t('home.hero.hash')}</div>
                 <div className="text-[13px] font-mono text-[var(--color-text-secondary)]">a1b2c3...</div>
               </div>
               <div>
-                <div className="label-sm mb-1">Status</div>
+                <div className="label-sm mb-1">{t('home.hero.status')}</div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  <span className="text-[13px] font-mono text-accent">Minted</span>
+                  <span className="text-[13px] font-mono text-accent">{t('home.hero.minted')}</span>
                 </div>
               </div>
             </div>
@@ -125,14 +134,14 @@ export function Home() {
               <Zap className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <div className="text-[13px] font-semibold">Token-Gated</div>
-              <div className="text-[10px] text-[var(--color-text-dim)] font-mono">5 XLM Access</div>
+              <div className="text-[13px] font-semibold">{t('home.hero.token_gated')}</div>
+              <div className="text-[10px] text-[var(--color-text-dim)] font-mono">{t('home.hero.access_fee')}</div>
             </div>
           </div>
 
           {/* Floating badge 2 */}
           <div className="absolute -top-4 -right-4 glass-panel-elevated px-4 py-2 animate-float" style={{ animationDelay: '2s' }}>
-            <div className="text-[10px] font-mono text-accent uppercase tracking-wider">+12 XLM tip</div>
+            <div className="text-[10px] font-mono text-accent uppercase tracking-wider">{t('home.hero.tip')}</div>
           </div>
         </div>
       </section>
@@ -141,8 +150,8 @@ export function Home() {
       {/* ── How It Works ─────────────────────────────────────────────── */}
       <section>
         <div className="text-center mb-14">
-          <span className="eyebrow">How it works</span>
-          <h2 className="text-[40px] font-serif tracking-[-1px]">Publish in Three Steps</h2>
+          <span className="eyebrow">{t('home.how_it_works.eyebrow')}</span>
+          <h2 className="text-[40px] font-serif tracking-[-1px]">{t('home.how_it_works.title')}</h2>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8 stagger-children">
@@ -159,7 +168,7 @@ export function Home() {
                 <Icon className={`w-5 h-5 ${color === 'accent' ? 'text-accent' : 'text-primary'}`} />
               </div>
               
-              <div className="label-sm mb-2">Step {step}</div>
+              <div className="label-sm mb-2">{t('home.how_it_works.step')} {step}</div>
               <h3 className="text-xl font-serif mb-3">{title}</h3>
               <p className="text-[13px] text-[var(--color-text-dim)] leading-[1.6]">{description}</p>
             </div>
@@ -171,11 +180,11 @@ export function Home() {
       <section>
         <div className="flex items-end justify-between mb-10">
           <div>
-            <span className="eyebrow">Latest on StellarScribe</span>
-            <h2 className="text-[40px] font-serif tracking-[-1px]">Featured Content</h2>
+            <span className="eyebrow">{t('home.featured.eyebrow')}</span>
+            <h2 className="text-[40px] font-serif tracking-[-1px]">{t('home.featured.title')}</h2>
           </div>
           <Link to="/explore" className="btn-outline text-[11px] py-2.5 px-5 flex items-center gap-2">
-            View All <ArrowRight className="w-3.5 h-3.5" />
+            {t('home.featured.view_all')} <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
           </Link>
         </div>
         
@@ -193,13 +202,13 @@ export function Home() {
         
         <div className="relative z-10 text-center py-20 px-8">
           <h2 className="text-[44px] font-serif tracking-[-1px] mb-4">
-            Ready to <span className="text-gradient">Own</span> Your Content?
+            {t('home.cta.title').split('Own')[0]}<span className="text-gradient">Own</span>{t('home.cta.title').split('Own')[1]}
           </h2>
           <p className="text-[16px] text-[var(--color-text-dim)] max-w-lg mx-auto mb-8 leading-relaxed">
-            Join the next generation of writers who publish, tokenize, and monetize their work on the Stellar blockchain.
+            {t('home.cta.subtitle')}
           </p>
           <Link to="/write" className="btn-accent inline-flex items-center gap-2 group">
-            Start Writing <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {t('home.cta.start_writing')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform rtl:rotate-180" />
           </Link>
         </div>
       </section>

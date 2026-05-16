@@ -3,14 +3,17 @@ import { useWallet } from '../store/useWallet';
 import { formatAddress } from '../lib/utils';
 import { Wallet, PenSquare, Compass, LayoutDashboard, Gem, Menu, X, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-const NAV_LINKS = [
-  { to: '/explore', label: 'Explore', icon: Compass },
-  { to: '/write', label: 'Write', icon: PenSquare },
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-];
+import { useTranslation } from 'react-i18next';
 
 export function Navbar() {
+  const { t, i18n } = useTranslation();
+  
+  const NAV_LINKS = [
+    { to: '/explore', label: t('nav.explore'), icon: Compass },
+    { to: '/write', label: t('nav.write'), icon: PenSquare },
+    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+  ];
+
   const { isConnected, publicKey, connect, disconnect, isConnecting, balance } = useWallet();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -77,18 +80,36 @@ export function Navbar() {
                   onClick={disconnect}
                   className="text-[10px] font-mono uppercase tracking-[1px] text-[var(--color-text-dim)] hover:text-[var(--color-error)] transition-colors cursor-pointer px-2 py-1.5"
                 >
-                  Disconnect
+                  {t('nav.disconnect', 'Disconnect')}
+                </button>
+                
+                {/* Language Switcher */}
+                <button 
+                  onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
+                  className="text-[10px] font-mono uppercase tracking-[1px] text-primary hover:text-accent transition-colors cursor-pointer px-2 py-1.5 border border-primary/20 rounded-sm"
+                >
+                  {i18n.language === 'ar' ? 'EN' : 'AR'}
                 </button>
               </div>
             ) : (
-              <button 
-                onClick={connect}
-                disabled={isConnecting}
-                className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-black font-semibold text-[11px] font-mono uppercase tracking-[1.5px] hover:bg-gray-100 transition-all disabled:opacity-50 cursor-pointer rounded-sm"
-              >
-                <Wallet className="w-3.5 h-3.5" />
-                {isConnecting ? "Connecting..." : "Connect Wallet"}
-              </button>
+              <div className="hidden md:flex items-center gap-3">
+                <button 
+                  onClick={connect}
+                  disabled={isConnecting}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-black font-semibold text-[11px] font-mono uppercase tracking-[1.5px] hover:bg-gray-100 transition-all disabled:opacity-50 cursor-pointer rounded-sm"
+                >
+                  <Wallet className="w-3.5 h-3.5" />
+                  {isConnecting ? t('nav.connecting', 'Connecting...') : t('nav.connect_wallet')}
+                </button>
+                
+                {/* Language Switcher */}
+                <button 
+                  onClick={() => i18n.changeLanguage(i18n.language === 'ar' ? 'en' : 'ar')}
+                  className="text-[10px] font-mono uppercase tracking-[1px] text-primary hover:text-accent transition-colors cursor-pointer px-2 py-1.5 border border-primary/20 rounded-sm"
+                >
+                  {i18n.language === 'ar' ? 'EN' : 'AR'}
+                </button>
+              </div>
             )}
 
             {/* Mobile Toggle */}

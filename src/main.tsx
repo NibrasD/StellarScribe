@@ -7,6 +7,7 @@ import { Explore } from './pages/Explore';
 import { Write } from './pages/Write';
 import { Article } from './pages/Article';
 import { Dashboard } from './pages/Dashboard';
+import './lib/i18n';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
