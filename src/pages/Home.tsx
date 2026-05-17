@@ -201,7 +201,7 @@ export function Home() {
         
         <div className="relative z-10 text-center py-20 px-8">
           <h2 className="text-[44px] font-serif tracking-[-1px] mb-4">
-            {t('home.cta.title').split('Own')[0]}<span className="text-gradient">Own</span>{t('home.cta.title').split('Own')[1]}
+            {t('home.cta.title').split('*')[0]}<span className="text-gradient">{t('home.cta.title').split('*')[1]}</span>{t('home.cta.title').split('*')[2]}
           </h2>
           <p className="text-[16px] text-[var(--color-text-dim)] max-w-lg mx-auto mb-8 leading-relaxed">
             {t('home.cta.subtitle')}

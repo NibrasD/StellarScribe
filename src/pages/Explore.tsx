@@ -92,7 +92,7 @@ export function Explore() {
       <div className="mb-10">
         <span className="eyebrow">{t('explore.eyebrow')}</span>
         <h1 className="text-[48px] font-serif tracking-[-1.5px] leading-[1.05] mb-6">
-          {t('explore.title').split('Network')[0]}<span className="text-gradient">Network</span>{t('explore.title').split('Network')[1]}
+          {t('explore.title').split('*')[0]}<span className="text-gradient">{t('explore.title').split('*')[1]}</span>{t('explore.title').split('*')[2]}
         </h1>
         
         {/* Search & Filter bar */}

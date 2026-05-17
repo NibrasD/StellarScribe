@@ -78,6 +78,13 @@
       "no_match": "No articles match this filter"
     }
   },
+  "write": {
+    "wallet_required": {
+      "title": "Wallet Required",
+      "description": "Connect your Freighter wallet to publish content on the Stellar network.",
+      "identity": "Your on-chain identity is linked to your wallet"
+    }
+  },
   "footer": {
     "description": "The decentralized content platform built on Stellar. Publish, tokenize, and monetize your writing using Soroban smart contracts.",
     "testnet": "Soroban Testnet",

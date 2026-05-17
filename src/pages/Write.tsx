@@ -12,8 +12,10 @@ import { CONTRACT_METHODS } from '../lib/contract';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { PublishModal } from '../components/PublishModal';
 import { Save, UploadCloud, AlertCircle, Lock, Coins, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function Write() {
+  const { t } = useTranslation();
   const { isConnected, publicKey } = useWallet();
   const addArticle = useAppStore(state => state.addArticle);
   const navigate = useNavigate();
@@ -149,12 +151,12 @@ export function Write() {
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-white/[0.03] flex items-center justify-center">
             <AlertCircle className="w-7 h-7 text-[var(--color-text-muted)]" />
           </div>
-          <h2 className="text-2xl font-serif mb-3">Wallet Required</h2>
+          <h2 className="text-2xl font-serif mb-3">{t('write.wallet_required.title', 'Wallet Required')}</h2>
           <p className="text-[var(--color-text-dim)] mb-2 text-[14px] leading-relaxed">
-            Connect your Freighter wallet to publish content on the Stellar network.
+            {t('write.wallet_required.description', 'Connect your Freighter wallet to publish content on the Stellar network.')}
           </p>
           <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-text-muted)]">
-            Your on-chain identity is linked to your wallet
+            {t('write.wallet_required.identity', 'Your on-chain identity is linked to your wallet')}
           </p>
         </div>
       </div>
