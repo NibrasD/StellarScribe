@@ -1,6 +1,7 @@
 {
   "nav": {
     "home": "Home",
+    "feed": "Feed",
     "explore": "Explore",
     "write": "Write",
     "dashboard": "Dashboard",

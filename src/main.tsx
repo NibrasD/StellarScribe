@@ -7,6 +7,7 @@ import { Explore } from './pages/Explore';
 import { Write } from './pages/Write';
 import { Article } from './pages/Article';
 import { Dashboard } from './pages/Dashboard';
+import { Feed } from './pages/Feed';
 import './lib/i18n';
 import './index.css';
 
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/feed" element={<Feed />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/write" element={<Write />} />
           <Route path="/article/:id" element={<Article />} />
