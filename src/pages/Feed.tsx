@@ -5,6 +5,8 @@ import { formatAddress, addressGradient } from '../lib/utils';
 import { TipJarMiniApp } from '../components/miniapps/TipJarMiniApp';
 import { PollMiniApp } from '../components/miniapps/PollMiniApp';
 import { NFTMintMiniApp } from '../components/miniapps/NFTMintMiniApp';
+import { QuizMiniApp } from '../components/miniapps/QuizMiniApp';
+import { StreakMiniApp } from '../components/miniapps/StreakMiniApp';
 import {
   Heart, MessageCircle, Repeat2, Share2, MoreHorizontal,
   Zap, Shield, Image, Sparkles, TrendingUp, Globe, Users
@@ -25,7 +27,7 @@ interface Cast {
   likes: number;
   replies: number;
   recasts: number;
-  miniApp?: 'tip-jar' | 'poll' | 'nft-mint';
+  miniApp?: 'tip-jar' | 'poll' | 'nft-mint' | 'quiz' | 'streak';
   miniAppData?: any;
   liked?: boolean;
 }
@@ -55,6 +57,53 @@ const DEMO_CASTS: Cast[] = [
         { id: 'c', text: 'سيتعايشان معاً', votes: 89 },
         { id: 'd', text: 'لست متأكداً بعد', votes: 34 },
       ],
+    },
+  },
+  {
+    id: 'quiz-1',
+    author: { name: 'عمر المختار', address: 'GXYZ1...TEST1', verified: true },
+    text: 'من يملك أسرع بديهة هنا؟ 🤓 مسابقة سريعة في أساسيات البلوكتشين وعقود Soroban. الفائز الأول في الـ Leaderboard سيربح 50 XLM!',
+    timestamp: 'منذ ساعتين',
+    likes: 312, replies: 84, recasts: 45,
+    miniApp: 'quiz',
+    miniAppData: {
+      title: 'تحدي Soroban للمطورين',
+      participants: 128,
+      questions: [
+        {
+          id: 'q1',
+          text: 'أي لغة برمجة تُستخدم لكتابة عقود Soroban الذكية؟',
+          options: [
+            { id: '1', text: 'Solidity', isCorrect: false },
+            { id: '2', text: 'Rust', isCorrect: true },
+            { id: '3', text: 'Go', isCorrect: false },
+            { id: '4', text: 'C++', isCorrect: false },
+          ]
+        },
+        {
+          id: 'q2',
+          text: 'ما هو زمن تأكيد المعاملة التقريبي على شبكة Stellar؟',
+          options: [
+            { id: '1', text: '12 ثانية', isCorrect: false },
+            { id: '2', text: '10 دقائق', isCorrect: false },
+            { id: '3', text: '3-5 ثوانٍ', isCorrect: true },
+            { id: '4', text: 'ساعة', isCorrect: false },
+          ]
+        }
+      ],
+    },
+  },
+  {
+    id: 'streak-1',
+    author: { name: 'فاطمة أحمد', address: 'GXYZ2...TEST2', verified: false },
+    text: 'بدأت تحدي القراءة اليومي على المنصة 📚🔥 الهدف: 30 يوماً متتالية من قراءة مقالات Web3. من ينضم إلي لنشكل مجتمعاً معرفياً؟ سجّلوا قراءتكم اليومية على السلسلة.',
+    timestamp: 'منذ 4 ساعات',
+    likes: 89, replies: 21, recasts: 12,
+    miniApp: 'streak',
+    miniAppData: {
+      challengeName: '#30DaysOfWeb3',
+      targetDays: 30,
+      participants: 543,
     },
   },
   {
@@ -151,6 +200,20 @@ function CastCard({ cast }: { cast: Cast }) {
               title={cast.miniAppData.title}
               previewText={cast.miniAppData.previewText}
               authorName={cast.miniAppData.authorName}
+            />
+          )}
+          {cast.miniApp === 'quiz' && (
+            <QuizMiniApp
+              title={cast.miniAppData.title}
+              questions={cast.miniAppData.questions}
+              participants={cast.miniAppData.participants}
+            />
+          )}
+          {cast.miniApp === 'streak' && (
+            <StreakMiniApp
+              challengeName={cast.miniAppData.challengeName}
+              targetDays={cast.miniAppData.targetDays}
+              participants={cast.miniAppData.participants}
             />
           )}
         </div>
