@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Serif+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', 'Noto Serif Arabic', Georgia, serif;
+  --font-sans: 'Inter', 'Tajawal', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', 'Amiri', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   --color-bg-base: #06060A;
@@ -29,7 +29,30 @@
   --color-success: #00E87B;
   --color-error: #FF4466;
   --color-warning: #FFAA22;
+  --color-warning: #FFAA22;
   --color-info: #3388FF;
+}
+
+:root[data-theme="light"] {
+  --color-bg-base: #F8F9FA;
+  --color-bg-elevated: #FFFFFF;
+  --color-surface: #E9ECEF;
+  --color-surface-hover: #DEE2E6;
+  --color-surface-active: #CED4DA;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-bright: rgba(0, 0, 0, 0.2);
+
+  --color-primary: #5A27DF;
+  --color-primary-soft: #441CB0;
+  --color-primary-glow: rgba(90, 39, 223, 0.15);
+  --color-accent: #00A65A;
+  --color-accent-soft: rgba(0, 166, 90, 0.15);
+  --color-accent-glow: rgba(0, 166, 90, 0.15);
+
+  --color-text-main: #111827;
+  --color-text-secondary: #374151;
+  --color-text-dim: #4B5563;
+  --color-text-muted: #6B7280;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────── */
