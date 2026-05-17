@@ -41,7 +41,6 @@ export function Home() {
   ];
 
   const featuredArticles = articles.slice(0, 3);
-  const featuredArticles = articles.slice(0, 3);
   const [heroWordIdx, setHeroWordIdx] = useState(0);
 
   useEffect(() => {
